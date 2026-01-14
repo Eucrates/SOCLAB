@@ -45,10 +45,10 @@ Splunk via Universal Forwarder
 
 ### SIEM
 
--   Splunk Enterprise (Free)
+-   Splunk Enterprise (Free, requires account)
 
 ### Endpoint Logging
-
+-   Splunk Universal Forwarder (requires free account)
 -   Sysmon (Windows)
 -   Windows Event Logs
 -   auditd (Linux)
@@ -85,10 +85,12 @@ Splunk via Universal Forwarder
 ### Windows Endpoint
 
 -   Install Sysmon with SwiftOnSecurity config
-	https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon
-	https://github.com/SwiftOnSecurity/sysmon-config/blob/master/sysmonconfig-export.xml
-	> Sysmon64.exe -i -accepteula sysmonconfig-export.xml
--   Enable:
+```
+https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon
+https://github.com/SwiftOnSecurity/sysmon-config/blob/master/sysmonconfig-export.xml
+
+	PS > Sysmon64.exe -i -accepteula sysmonconfig-export.xml
+- Enable:
     -   Security logs
 	From Powershell:
 	auditpol /set /category:"Account Logon" /success:enable /failure:enable
@@ -108,9 +110,10 @@ Splunk via Universal Forwarder
  		/d 1 `
  		/f
 	(reboot after this setting)
-    -   PowerShell Operational logs
+	
+  -     PowerShell Operational logs
+  
 	PS> wevtutil sl Microsoft-Windows-PowerShell/Operational /e:true
-
 	PS> reg add HKLM\Software\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging `
 	 /v EnableScriptBlockLogging `
 	 /t REG_DWORD `
@@ -131,7 +134,7 @@ Splunk via Universal Forwarder
 
 	PS> gpupdate /force
 
--   Install Splunk Universal Forwarder
+-Install Splunk Universal Forwarder
 	https://www.splunk.com/en_us/download/universal-forwarder.html?locale=en_us
 	Deployment Server -> leave blank
 	Receiving Indexer: SIEM_IP:9997
@@ -145,6 +148,7 @@ Splunk via Universal Forwarder
 - Verify Forwarder is Sending Data:
 	PS> cd "C:\Program Files\SplunkUniversalForwarder\bin"
 	PS> .\splunk.exe list forward-server
+```
 ### Linux Server
 
 -   Enable auditd
@@ -152,43 +156,61 @@ Splunk via Universal Forwarder
     -   /var/log/auth.log
     -   /var/log/syslog
 -   Install Splunk Universal Forwarder
-	https://www.splunk.com/en_us/download/universal-forwarder.html?locale=en_us
+```
+https://www.splunk.com/en_us/download/universal-forwarder.html?locale=en_us
+```
+
 ### Network Monitoring
 
 -   Install Suricata
 -   Enable eve.json output
 -   Forward traffic through Ubuntu-Server
 1. Enable IP Forwarding on Ubuntu
-	sudo nano /etc/sysctl.conf
-		uncomment:
+```
+$ sudo nano /etc/sysctl.conf
+
+uncomment:
 		net.ipv4.ip_forward=1
-	sudo sysctl -p
+$ sudo sysctl -p
+```
 2. Configure NAT
-	sudo iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
-	sudo iptables -A FORWARD -i ens33 -o ens33 -m state --state RELATED,ESTABLISHED -j ACCEPT
-	sudo iptables -A FORWARD -i ens33 -o ens33 -j ACCEPT
-    Verify:
-	sudo iptables -t nat -L -v
+```
+$ sudo iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
+$ sudo iptables -A FORWARD -i ens33 -o ens33 -m state --state RELATED,ESTABLISHED -j ACCEPT
+$ sudo iptables -A FORWARD -i ens33 -o ens33 -j ACCEPT
+Verify:
+$ sudo iptables -t nat -L -v
+```
+
 3. Point Windows VM to Ubuntu as Gateway
-	Get-NetIPConfiguration
-	New-NetRoute -DestinationPrefix "0.0.0.0/0" -InterfaceAlias "Ethernet" -NextHop 192.168.228.130
-    Confirm
-	route print
--   Forward Suricata logs to Splunk
+```
+PS>	Get-NetIPConfiguration
+PS>	New-NetRoute -DestinationPrefix "0.0.0.0/0" -InterfaceAlias "Ethernet" -NextHop 192.168.228.130
+    Confirm:
+PS>	route print
+```
+4. Forward Suricata logs to Splunk
    Add Stanzas to /opt/splunkforwarder/etc/system/local/inputs.conf for each log ingested
-	
-	[monitor:///var/log/suricata/eve.json]
-	index = suricata
-	sourcetype = suricata:json
-	disabled = false
-   Restart Universal Forwarder
-	sudo /opt/splunkforwarder/bin/splunk restart
+```	
+[monitor:///var/log/suricata/eve.json]
+index = suricata
+sourcetype = suricata:json
+disabled = false
+```
+  Restart Universal Forwarder
+
+```
+$ sudo /opt/splunkforwarder/bin/splunk restart
+```
 
 ### Build Splunk Alert
 1. Trigger when Suricata detects ET POLICY activity from any host.
 	ET POLICY rules are from Emerging Threats;
+	
 	Network activity that may violate security policy or indicate risky behavior.
+	
 	Examples:
+	
 		- HTTP instead of HTTPS
 		- FTP
 		- Telnet
@@ -230,8 +252,13 @@ Splunk via Universal Forwarder
 
 ## 8. Incident Response Workflow
 
-For each alert: 1. Alert description 2. Initial triage 3. Evidence
-reviewed 4. MITRE technique 5. Containment recommendations
+For each alert: 
+1. Alert description 
+2. Initial triage 
+3. Evidence
+reviewed 
+4. MITRE technique 
+5. Containment recommendations
 
 Document findings in markdown incident reports.
 
