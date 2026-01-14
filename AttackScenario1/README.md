@@ -1,0 +1,163 @@
+**<u>Scenario 1</u>**: Suspicious Outbound Network Activity (Initial Foothold / Policy Violation)
+
+**<u>Attack Behavior</u>**:
+
+Windows host makes outbound connections to unusual ports or IPs
+Traffic triggers ET POLICY rules in Suricata. 
+A Windows workstation initiates outbound network connections that violate organizational policy. The traffic is not confirmed malware but is suspicious enough to warrant investigation.
+		
+This mirrors:
+	<ul>
+		<li> Malware staging</li>
+		<li> C2 testing</li>
+		<li> User installing unauthorized software </li>
+		<li> Misconfigured applications </li>
+		<li> Early sign of malware staging or C2 testing </li>
+	</ul>	
+**<u>Telemetry Generated</u>**:
+	<ul>
+		<li> Suricata: event_type=alert, signature=\<POLICY\> </li>
+		<li> Windows: Sysmon network events (Event ID 3) </li>
+	</ul>
+
+**<u>Attack Simulation</u>**:
+
+Lab Goal: Trigger ET POLICY rules without malware
+	<ol>
+		<li> Unusual outbound port </li>
+		&emsp;- from Windows machine: &ensp;```PS> Invoke-WebRequest http://evilsite.unusualport.com:8080```
+	</ol>
+		<img src="images/Scenario1WindowsWebRequests.png"
+			alt="Windows Web Requests"
+			style="display: block; margin: 0 auto"
+			width="75%"/>
+	<ol> &emsp;- from Ubuntu machine: &ensp;```$ curl http://evilsite.unusalport.com:8080```
+	</ol>
+		<img src="images/Scenario1UbuntuWebRequests.png"
+			alt="Linux Web Requests"
+			style="display: block; margin: 0 auto"
+			width="75%"/>
+	<ol start= "2">	
+		<li> Suspicious User-Agent </li>
+		&emsp;- from both: ```curl -A "curl/EvilUserAgent" http://evilsite.com:8080```
+	</ol>
+	 <img src="images/Scenario1SuspiciousUserAgentAndPort.png"
+			alt="Suspicious User Agent and Port"
+			style="display: block; margin: 0 auto"
+			width="75%"/>
+	
+**<u>Expected Telemetry</u>**:
+<ol>
+	<li> Suricata (Ubuntu Gateway)
+		<ul>
+			<li> event_type=alert </li>
+			<li> alert.signature contains ET POLICY </li>
+			<li> Source IP = \<host ip\> </li>
+			<li> Destination IP = external site </li>
+			<li> Protocol = HTTP/TCP </li>
+		</ul>
+	<li>Windows (Sysmon)
+		<ul>
+			<li> Event ID 3 (Network Connection) </li>
+			<li> Image: curl.exe or powershell.exe </li>
+			<li> Destination port: 8080 </li>
+		</ul>
+</ol>
+
+At this point I was not receiving alerts on curl or destination port 8080, so I wrote some custom suricata rules:
+
+```
+alert http any any -> any !80 (msg:"SOC POLICY HTTP on Non-Standard Port";    flow:to_server,established; sid:9000001;rev:1;)
+
+alert http any any -> any any (msg:"SOC POLICY Curl User-Agent Outbound";    http.user_agent;content:"curl";nocase;sid:9000002;rev:1;)
+``` 
+
+Also, because my lab is not connected to the internet, I couldn't just run any curl command; I had to target an ip address within my network so that the connection would register as an HTTP request to validate the http.user_agent field. I set up as server on my suricata machine, which is acting as a gateway:
+
+```
+$ python3 -m http.server 8080
+```
+ 
+Then ran Invoke-WebRequest and curl from my windows machine:
+
+<img src="images/Scenario1WindowsUnusualPort.png"
+	alt="Invoke-WebRequest Unusal Port"
+	style="display: block; margin: 0 auto"
+	width="75%"/>
+
+<img src="images/Scenario1WindowsEvilUserAgent.png"
+	alt="Suspicious User Agent and Port"
+	style="display: block; margin: 0 auto"
+	width="75%"/>
+
+**<u>Detection Validation in Splunk</u>**:
+
+&emsp;Primary Detection Search
+```
+index=main sourcetype=suricata:json event_type=alert
+| search alert.signature="*POLICY*"
+```
+&emsp;Expected information:
+	<ul>
+		<li> Alert signature </li>
+		<li> src_ip / dest_ip </li>
+		<li> dest_port </li>
+		<li> timestamp </li>
+	</ul>
+
+<img src="images/Scenario1SplunkAlertsPortandCurl.png"
+	alt="Splunk Alerts"
+	style="display: block; margin: 0 auto"
+	width="75%"/>
+	
+<img src="images/Scenario1SplunkVerifyResultsCurlandUnusualPort.png"
+	alt="Splunk Results"
+	style="display: block; margin: 0 auto"
+	width="75%"/>
+	
+&emsp;Pivot: Confirm Host Activity (Sysmon)
+```
+index=main sourcetype=XmlWinEventLog:Microsoft-Windows-Sysmon/Operational EventCode=3
+```
+&emsp;Filter on:
+	<ul>
+		<li> DestinationPort=8080 </li>
+	</ul>	
+	
+<img src="images/Scenario1DestPort8080.png"
+	alt="Destination Port 8080"
+	style="display: block; margin: 0 auto"
+	width="85%"/>
+```
+index=main sourcetype=suricata:json
+| search dest_port=8080
+| table _time src_ip dest_ip dest_port http.http_user_agent
+| sort - _time
+```
+<ul>
+		<li> Image="*curl.exe" </li>
+	</ul>
+
+```
+index=main sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
+| rex "<Data Name='Image'>(?<Image>[^<]+)</Data>"
+| rex "<Data Name='CommandLine'>(?<CommandLine>[^<]+)</Data>"
+| rex "<Data Name='ParentImage'>(?<ParentImage>[^<]+)</Data>"
+| rex "<Data Name='User'>(?<User>[^<]+)</Data>"
+| search CommandLine="*curl*"
+| table _time host User Image CommandLine ParentImage
+| sort - _time
+```
+
+<img src="images/Scenario1ImageCurl.png"
+	alt="Command Line contains curl"
+	style="display: block; margin: 0 auto"
+	width="95%"/>
+
+**<u>MITRE ATT&CK Mapping</u>**:
+	
+| Tactic            | Technique | Evidence                |
+| ----------------- | --------- | ----------------------- |
+| Execution         | T1059     | Shell-launched curl     |
+| Command & Control | T1071.001 | HTTP traffic            |
+| Command & Control | T1105     | Potential tool transfer |
