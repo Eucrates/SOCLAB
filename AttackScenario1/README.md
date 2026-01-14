@@ -27,13 +27,13 @@ Lab Goal: Trigger ET POLICY rules without malware
 		<li> Unusual outbound port </li>
 		&emsp;- from Windows machine: &ensp;```PS> Invoke-WebRequest http://evilsite.unusualport.com:8080```
 	</ol>
-		<img src="images/Scenario1WindowsWebRequests.png"
+		<img src="Images/Scenario1WindowsWebRequests.png"
 			alt="Windows Web Requests"
 			style="display: block; margin: 0 auto"
 			width="75%"/>
 	<ol> &emsp;- from Ubuntu machine: &ensp;```$ curl http://evilsite.unusalport.com:8080```
 	</ol>
-		<img src="images/Scenario1UbuntuWebRequests.png"
+		<img src="Images/Scenario1UbuntuWebRequests.png"
 			alt="Linux Web Requests"
 			style="display: block; margin: 0 auto"
 			width="75%"/>
@@ -41,7 +41,7 @@ Lab Goal: Trigger ET POLICY rules without malware
 		<li> Suspicious User-Agent </li>
 		&emsp;- from both: ```curl -A "curl/EvilUserAgent" http://evilsite.com:8080```
 	</ol>
-	 <img src="images/Scenario1SuspiciousUserAgentAndPort.png"
+	 <img src="Images/Scenario1SuspiciousUserAgentAndPort.png"
 			alt="Suspicious User Agent and Port"
 			style="display: block; margin: 0 auto"
 			width="75%"/>
@@ -80,12 +80,12 @@ $ python3 -m http.server 8080
  
 Then ran Invoke-WebRequest and curl from my windows machine:
 
-<img src="images/Scenario1WindowsUnusualPort.png"
+<img src="Images/Scenario1WindowsUnusualPort.png"
 	alt="Invoke-WebRequest Unusal Port"
 	style="display: block; margin: 0 auto"
 	width="75%"/>
 
-<img src="images/Scenario1WindowsEvilUserAgent.png"
+<img src="Images/Scenario1WindowsEvilUserAgent.png"
 	alt="Suspicious User Agent and Port"
 	style="display: block; margin: 0 auto"
 	width="75%"/>
@@ -105,12 +105,12 @@ index=main sourcetype=suricata:json event_type=alert
 		<li> timestamp </li>
 	</ul>
 
-<img src="images/Scenario1SplunkAlertsPortandCurl.png"
+<img src="Images/Scenario1SplunkAlertsPortandCurl.png"
 	alt="Splunk Alerts"
 	style="display: block; margin: 0 auto"
 	width="75%"/>
 	
-<img src="images/Scenario1SplunkVerifyResultsCurlandUnusualPort.png"
+<img src="Images/Scenario1SplunkVerifyResultsCurlandUnusualPort.png"
 	alt="Splunk Results"
 	style="display: block; margin: 0 auto"
 	width="75%"/>
@@ -124,7 +124,7 @@ index=main sourcetype=XmlWinEventLog:Microsoft-Windows-Sysmon/Operational EventC
 		<li> DestinationPort=8080 </li>
 	</ul>	
 	
-<img src="images/Scenario1DestPort8080.png"
+<img src="Images/Scenario1DestPort8080.png"
 	alt="Destination Port 8080"
 	style="display: block; margin: 0 auto"
 	width="85%"/>
@@ -149,7 +149,7 @@ index=main sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
 | sort - _time
 ```
 
-<img src="images/Scenario1ImageCurl.png"
+<img src="Images/Scenario1ImageCurl.png"
 	alt="Command Line contains curl"
 	style="display: block; margin: 0 auto"
 	width="95%"/>
