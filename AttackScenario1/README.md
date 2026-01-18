@@ -27,7 +27,7 @@ Lab Goal: Trigger ET POLICY rules without malware
 		<li> Unusual outbound port </li>
 		&emsp;- from Windows machine: &ensp;```PS> Invoke-WebRequest http://evilsite.unusualport.com:8080```
 	</ol>
-		<img src="Images/Scenario1WindowsWebRequests.png"
+<img src="Images/Scenario1WindowsWebRequests.png"
 			alt="Windows Web Requests"
 			style="display: block; margin: 0 auto"
 			width="75%"/>
@@ -41,7 +41,8 @@ Lab Goal: Trigger ET POLICY rules without malware
 		<li> Suspicious User-Agent </li>
 		&emsp;- from both: ```curl -A "curl/EvilUserAgent" http://evilsite.com:8080```
 	</ol>
-	 <img src="Images/Scenario1SuspiciousUserAgentAndPort.png"
+
+<img src="Images/Scenario1SuspiciousUserAgentandPort.png"
 			alt="Suspicious User Agent and Port"
 			style="display: block; margin: 0 auto"
 			width="75%"/>
