@@ -34,7 +34,7 @@ Splunk via Universal Forwarder
                            \           /
                                 ____
                                ||__||  
-	                           [ -= ]  
+	                       [ -= ]  
                                ======                       
                                SIEM
                                192.168.228.*
