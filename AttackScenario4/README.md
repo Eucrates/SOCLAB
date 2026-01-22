@@ -20,7 +20,7 @@ The lab consists of four virtual machines in the following topology
 	                           [ -= ]  
                                ======                       
                                SIEM
-                               192.168.*.*
+                               192.168.228.*
 
 We will be attacking from the kali machine on an external network (10.10.230.\*)  The ubuntu machine is accessible to the external network and running a web and ssh services.  It uses Suricata and Splunk Universal Forwarder to send telemetry to the SIEM which is running Splunk. The Windows machine is also running Splunk Universal Forwarder and routing all traffic through the Suricata IDS/IPS.
 
@@ -30,7 +30,7 @@ We will be attacking from the kali machine on an external network (10.10.230.\*)
 An attacker conducts reconnaissance against a website and discovers exposed credentials that allows ssh access to the machine.  Once, in the attacker enumerates the machine and tries to pivot further into the network.
 
 **<u>Telemetry Sources</u>**:
-	<ul>
+	<ol>
 		<li> apache2/access.log (web)
 			<ul>
 			<li> Source IP
@@ -53,7 +53,7 @@ An attacker conducts reconnaissance against a website and discovers exposed cred
 			<li> Working Directory
 			<li> User, UID, AUID
 			</ul>
-	</ul>
+	</ol>
 	
 **<u>Attack Simulation</u>**:  
 
